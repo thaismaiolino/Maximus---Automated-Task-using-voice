@@ -44,6 +44,7 @@ def doAction(a):
                    wait_anwser = {"active": True,"waiting_command": False, "waiting_anwser":True ,"action":"download", "program": program}
 
                 else:
+                    ##### ISN'T BRINGRING THE APP TO THE FRONT. JUST OPEN IN THE BACK. CHANGE IT TO ONE IN FRONT
                     os.system(tmp[0]+"/Contents/MacOS/" + tmp[1])
                     wait_anwser = {"active": False, "waiting_command": False, "waiting_anwser":False, "action":None, "program": None}
 
@@ -148,6 +149,9 @@ def retrieve_city_weather_info(city):
                     print element['description']
                     weather_doc['description'] = element['description']
                     break
+
+     ########## STILL NEED TO RETRIEVE TEMPERATURE TO ADD TO THE CONVERSATION
+
 
             # if item == 'main':
             #     for element in data.json()['main']:
