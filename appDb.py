@@ -19,7 +19,7 @@ def insereDocApp(path, appName):
     pref = {}
     if checkAPP(path):
         pref["path"] = path
-        pref["appNome"] = appName
+        pref["appNome"] = appName.split('.')[0].lower()
         pref["fala"] = appName
         pref["_id"] = uuid.uuid1()
         sysProgram.insert(pref)
@@ -38,7 +38,7 @@ def returnDocApp(appName):
      for doc in db.sysProgram.find({"appNome":appName}):
          print (doc["path"])
          return doc["path"], doc["appNome"]
-     return ("Comando nao existente")
+     return ("Program not found")
 
 def returnAllDocApp():
     return db.sysProgram.find()
@@ -87,4 +87,6 @@ def returnDocUser():
         print(doc)
         return doc
      return ("Error")
-
+#
+# for x in returnAllDocApp():
+#     removeDocApp(x['path'])
