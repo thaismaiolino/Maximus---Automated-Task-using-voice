@@ -1,27 +1,30 @@
 import rumps
-import main as listen
-from threading import Thread
+
+from Tkinter import *
+
+import appDb as db
 
 
-class AwesomeStatusBarApp(rumps.App):
+global nickname
+global user
+
+nickname = db.returnDocUser()["callname"]
+user = db.returnDocUser()['user']
+
+class SystemTrayApp(rumps.App):
     def __init__(self):
 
-        super(AwesomeStatusBarApp, self).__init__("App")
-        self.menu = ["Preferences", "Silly button", "Say hi"]
+        super(SystemTrayApp, self).__init__("ST")
+        self.menu = ["User Settings", "System Settings"]
 
-    @rumps.clicked("Preferences")
-    def prefs(self, _):
-        rumps.alert("jk! no preferences available!")
+    @rumps.clicked("User Settings")
+    def settings(self, _):
+        pass
 
-    @rumps.clicked("Silly button")
-    def onoff(self, sender):
-        sender.state = not sender.state
+    @rumps.clicked("System Settings")
+    def settings(self, _):
+        rumps.alert("jk! Yes preferences available!")
 
-
-    @rumps.clicked("Say hi")
-    def sayhi(self, _):
-        listen.startListener()
-        # rumps.notification("Awesome title", "amazing subtitle", "hi!!1")
 
 if __name__ == "__main__":
-    AwesomeStatusBarApp().run()
+    SystemTrayApp().run()

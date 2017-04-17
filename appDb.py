@@ -1,4 +1,6 @@
 import os
+
+import unicodedata
 from pymongo import MongoClient
 import uuid
 
@@ -17,19 +19,31 @@ def checkAPP(path):
 
 def insereDocApp(path, appName):
     pref = {}
+    speak_list = []
+    speak_list.append(appName.split('.')[0].lower())
     if checkAPP(path):
         pref["path"] = path
-        pref["appNome"] = appName.split('.')[0].lower()
+        pref["appNome"] = speak_list
         pref["fala"] = appName
         pref["_id"] = uuid.uuid1()
         sysProgram.insert(pref)
     else:
         pass
-        # print("Not able to insert")
+
 
 def printDocApp():
      for doc in db.sysProgram.find():
         print(doc)
+
+def findDocApp(app_name):
+    for doc in db.sysProgram.find():
+        if app_name in doc['appNome']:
+            print 'q'
+    # doc = db.sysProgram.find_one({"appNome": app_name})
+    # if (doc == None):
+    #     return None
+    # else:
+    #     return doc
 
 def removeDocApp(path):
     db.sysProgram.delete_many({"path":path})
@@ -42,6 +56,27 @@ def returnDocApp(appName):
 
 def returnAllDocApp():
     return db.sysProgram.find()
+
+def updateDocApp(appName, info):
+    doc = findDocApp(appName)
+    print doc
+    speak_list = doc['appNome']
+    print type(speak_list)
+    print speak_list
+    if info in speak_list:
+        return 'Nickname already exist.'
+    else:
+        print type(appName)
+        print type(info)
+        speak_list.append(info)
+        # db.ProductData.update_one({
+        #       '_id': doc['_id']
+        #     },{
+        #       '$set': {
+        #         'fala': speak_list
+        #       }
+        #     }, upsert=False)
+        return 'Nickname added.'
 
 def startDB():
     directory = '/Applications'
@@ -63,6 +98,9 @@ def checkUser(user):
     else:
         return False
 
+def removeProfile():
+    db.userProfile.delete_many({})
+
 def addProfile(user, callname):
     pref = {}
     print user, callname
@@ -72,7 +110,7 @@ def addProfile(user, callname):
         pref["_id"] = uuid.uuid1()
         userProfile.insert(pref)
     else:
-        print ('aqui')
+        print ('Error - Not able to insert user')
         pass
 
 def returnAllDocUser():
@@ -87,6 +125,3 @@ def returnDocUser():
         print(doc)
         return doc
      return ("Error")
-#
-# for x in returnAllDocApp():
-#     removeDocApp(x['path'])

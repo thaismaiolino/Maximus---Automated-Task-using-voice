@@ -1,9 +1,12 @@
+from datetime import datetime
 import speech_recognition as sr
 import webbrowser
 import unicodedata
 import appDb as db
 import os
 import requests
+import urllib2
+import time
 
 global start_listening
 start_listening = False
@@ -28,7 +31,7 @@ def doAction(a):
 
 
     if wait_anwser['active'] == True and wait_anwser["waiting_command"] == True:
-        if "open" in action.lower():
+        if "open" in action.lower(): # or "run" in action.lower() or "reopen" in action.lower():
             if "facebook" in action.lower():
                 url = 'https://www.facebook.com/'
                 webbrowser.open(url, new=0, autoraise=True)
@@ -38,14 +41,18 @@ def doAction(a):
             else:
                 program = action.replace("open", "").lstrip(' ')
                 print program
+                db.findDocApp(program)
                 tmp = db.returnDocApp(program)
                 if tmp == "Program not found":
                    systemTalks("You do not have "+program+". Would you like to download it?")
                    wait_anwser = {"active": True,"waiting_command": False, "waiting_anwser":True ,"action":"download", "program": program}
 
                 else:
-                    ##### ISN'T BRINGRING THE APP TO THE FRONT. JUST OPEN IN THE BACK. CHANGE IT TO ONE IN FRONT
-                    os.system(tmp[0]+"/Contents/MacOS/" + tmp[1])
+                    path_ini = tmp[0].replace(' ', '\ ')
+                    path_tmp = path_ini.split('/')
+                    path = "/"+path_tmp[1]+"/"+path_tmp[2]+"/Contents/MacOS/" + path_tmp[2].replace('.app','')
+                    os.system(path)
+
                     wait_anwser = {"active": False, "waiting_command": False, "waiting_anwser":False, "action":None, "program": None}
 
         elif "search" in action.lower():
@@ -65,11 +72,16 @@ def doAction(a):
             city = action[action.index('of')+3:].lower().strip()
             data = retrieve_city_weather_info(city)
             if data is not None:
-                systemTalks("The weather of"+city+ "is " + data['description']+" .") # The temperature is" +data['main']['temp'] )
+                systemTalks("The weather of"+city+ "is " + data['description']+"The temperature is" +data['temp']+". The max temperature can be "+data['temp_max']+" and the min temperaute can be"+data['temp_min'] )
 
             else:
                 systemTalks("I could not find this city. Do you want to tell me the city again?")
                 wait_anwser = {"active": True, "waiting_command": False, "waiting_anwser":True, "action":"weather", "program": None}
+
+        elif "time now" in action.lower():
+            time_now = datetime.now().strftime("%a, %d %b %Y %H:%M")
+            print time_now
+            systemTalks(time_now)
 
     elif wait_anwser['active'] == True and wait_anwser["waiting_anwser"] == True:
         if 'yes' in action or 'yep' in action :
@@ -132,42 +144,23 @@ def listenCommands(source):
 
 
 def retrieve_city_weather_info(city):
-    final_city = city.replace(' ','%20')
+    city = city.replace(' ', '%20')
     weather_doc = {}
 
-    print final_city
-    try:
-        url = 'http://api.openweathermap.org/data/2.5/weather?q='+final_city+'&APPID=14f212cb0456519d72374ff4c1f2ad31'
-        print url
 
+    try:
+        url = 'http://api.openweathermap.org/data/2.5/weather?q=' +city +'&units=metric&APPID=14f212cb0456519d72374ff4c1f2ad31'
         data = requests.get(url)
-        print data
-        print data.json()
         for item in data.json():
             if item == 'weather':
                 for element in data.json()['weather']:
-                    print element['description']
                     weather_doc['description'] = element['description']
                     break
 
-     ########## STILL NEED TO RETRIEVE TEMPERATURE TO ADD TO THE CONVERSATION
-
-
-            # if item == 'main':
-            #     for element in data.json()['main']:
-            #
-            #         if element == 'temp':
-            #             a = (element['temp'])
-            #             print a
-                    #     weather_doc['temperature'] = str(element['temp'])
-
-                    # if element == 'temp_min':
-                    #     print str(element)
-                    #     weather_doc['temperature_min'] = str(element['temp_min'])
-                    #
-                    # if element == 'temp_max':
-                    #     print (element['temp_max'])
-                    #     weather_doc['temperature_max'] = str(element['temp_max'])
+            if item == 'main':
+                weather_doc['temp'] = str(data.json()['main']['temp']) + " Celsius Degrees"
+                weather_doc['temp_max'] = str(data.json()['main']['temp_max']) + " Celsius Degrees"
+                weather_doc['temp_min'] = str(data.json()['main']['temp_min']) + " Celsius Degrees"
 
         return weather_doc
     except:
@@ -176,15 +169,35 @@ def retrieve_city_weather_info(city):
 def systemTalks(phrase):
     voice = "say -v Alex"
     return os.system( voice + " " + phrase)
+    print phrase
+
+def internet_on():
+
+    try:
+
+        urllib2.urlopen('http://216.58.192.142', timeout=1)
+        return True
+    except urllib2.URLError as err:
+
+        return False
 
 
 if __name__ == "__main__":
 
+    while 1:
+        print internet_on()
 
-    db.startDB()
-    nickname = db.returnDocUser()["callname"]
-    systemTalks("Hi, we are ready to start.")
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        while 1:
-            listenCommands(source)
+        if internet_on():
+
+            db.startDB()
+            nickname = db.returnDocUser()["callname"]
+            systemTalks("Hi, we are ready to start.")
+            r = sr.Recognizer()
+            with sr.Microphone() as source:
+                while 1:
+                    listenCommands(source)
+                    print wait_anwser
+        else:
+            systemTalks('Hey! You are not connect. Try to connect first!')
+            time.sleep(60)
+

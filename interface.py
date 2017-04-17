@@ -17,15 +17,8 @@ class Interface(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
         container["padx"] = 200
         container["pady"] = 50
-
-        self.frames = {}
-
-        for F in (StartPage, SettingsPage, ExcludePage):
-            frame = F(container, self)
-
-            self.frames[F] = frame
-
-            frame.grid(row=0, column=0, sticky="nsew")
+        frame = StartPage(container, self)
+        frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(StartPage)
 
