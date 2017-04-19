@@ -1,30 +1,17 @@
 import rumps
-
-from Tkinter import *
-
-import appDb as db
-
-
-global nickname
-global user
-
-nickname = db.returnDocUser()["callname"]
-user = db.returnDocUser()['user']
+import SettingsInterface as interface
 
 class SystemTrayApp(rumps.App):
     def __init__(self):
 
         super(SystemTrayApp, self).__init__("ST")
-        self.menu = ["User Settings", "System Settings"]
+        self.menu = ["User Settings"]
 
     @rumps.clicked("User Settings")
     def settings(self, _):
-        pass
+        interface.start()
 
-    @rumps.clicked("System Settings")
-    def settings(self, _):
-        rumps.alert("jk! Yes preferences available!")
-
-
-if __name__ == "__main__":
+def start():
+    print 'aqui'
     SystemTrayApp().run()
+start()

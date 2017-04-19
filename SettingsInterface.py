@@ -1,6 +1,5 @@
-from Tkinter import *
+import wx
 import appDb as db
-
 
 global nickname
 global user
@@ -8,57 +7,108 @@ global user
 nickname = db.returnDocUser()["callname"]
 user = db.returnDocUser()['user']
 
-class SettingsPage(object):
+class SettingsInterface(wx.Frame):
 
-    def __init__(self,window):
-        self.window = window
-        self.window.wm_title("Settings")
+    def __init__(self, parent, title):
+        super(SettingsInterface, self).__init__(parent, title=title,
+            size=(370, 220))
+        self.InitUI()
+        self.Centre()
+        self.Show()
 
-        l0=Label(window,text="Your Name:")
-        l0.grid(row=0,column=0)
+    def InitUI(self):
 
-        self.name_text=StringVar()
-        self.e0=Entry(window,textvariable=self.name_text)
-        self.e0.insert(0, user )
-        self.e0.grid(row=0,column=1)
+        panel = wx.Panel(self)
+
+        sizer = wx.GridBagSizer(5, 5)
+
+        text1 = wx.StaticText(panel, label="User Settings")
+        sizer.Add(text1, pos=(0, 0), flag=wx.TOP|wx.LEFT|wx.BOTTOM,
+            border=15)
+
+        icon = wx.StaticBitmap(panel, bitmap=wx.Bitmap('settings-3.png'))
+        sizer.Add(icon, pos=(0, 3), flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT,
+            border=5)
+
+        line = wx.StaticLine(panel)
+        sizer.Add(line, pos=(1, 0), span=(1, 5),
+            flag=wx.EXPAND|wx.BOTTOM, border=10)
+
+        name = wx.StaticText(panel, label="Your Name:")
+        sizer.Add(name, pos=(2, 0), flag=wx.LEFT, border=10)
+
+        self.name_tc = wx.TextCtrl(panel, value=user)
+        sizer.Add(self.name_tc, pos=(2, 1), span=(1, 3), flag=wx.TOP|wx.EXPAND)
+
+        machine = wx.StaticText(panel, label="Machine Nickname:")
+        sizer.Add(machine, pos=(3, 0), flag=wx.LEFT|wx.TOP, border=10)
+
+        self.machine_tc = wx.TextCtrl(panel, value=nickname)
+        sizer.Add(self.machine_tc, pos=(3, 1), span=(1, 3), flag=wx.TOP|wx.EXPAND,
+            border=5)
 
 
-        l1=Label(window,text="Machine nickname:")
-        l1.grid(row=1,column=0)
+        help_btn = wx.Button(panel,wx.ID_INFO, label='Help')
+        sizer.Add(help_btn, pos=(5, 0), flag=wx.LEFT, border=10)
+        self.Bind(wx.EVT_BUTTON, self.help, id=wx.ID_INFO)
 
-        self.machine_name_text=StringVar()
-        self.e1=Entry(window,textvariable=self.machine_name_text)
-        self.e1.insert(0, nickname )
-        self.e1.grid(row=1,column=1)
+        save_btn = wx.Button(panel,wx.ID_SAVE, label="Save")
+        sizer.Add(save_btn, pos=(5, 2))
+        self.Bind(wx.EVT_BUTTON, self.SaveChanges, id=wx.ID_SAVE)
 
-        b1=Button(window,text="Save", width=12,command=self.view_command)
-        b1.grid(row=3,column=1)
+        close_btn = wx.Button(panel, wx.ID_EXIT, label="Close")
+        sizer.Add(close_btn, pos=(5, 3), span=(1, 1),
+            flag=wx.BOTTOM|wx.RIGHT, border=5)
+
+        self.Bind(wx.EVT_BUTTON, self.OnQuitApp, id=wx.ID_EXIT)
+
+        sizer.AddGrowableCol(2)
+
+        panel.SetSizer(sizer)
+    def OnQuitApp(self, event):
+
+        self.Close()
 
 
-        b2=Button(window,text="Close", width=12,command=window.destroy)
-        b2.grid(row=3,column=0)
 
+    def SaveChanges(self,event):
 
-
-
-    def view_command(self):
-        if self.name_text.get() == user and self.machine_name_text.get() == nickname:
-            print 'There is no changes to be saved.'
-            l2=Label(window,text="There is no changes to be saved.", fg="red")
-            l2.grid(row=2,column=0)
+        if self.name_tc.GetValue() == user and self.machine_tc.GetValue() == nickname:
+            self.ShowMessage('There is no changes to be saved.', 'Failed')
         else:
             db.removeProfile()
-            db.addProfile(self.name_text.get(), self.machine_name_text.get())
+            db.addProfile(self.name_tc.GetValue(), self.machine_tc.GetValue())
 
             global nickname
             nickname = db.returnDocUser()["callname"]
 
             global user
             user = db.returnDocUser()['user']
-            l2=Label(window,text="Information Saved!",fg="red")
-            l2.grid(row=2,column=0)
+            self.ShowMessage('Information Saved!', 'Success')
+
+    def help(self):
+        pass
+
+    def ShowMessage(self, msg, header):
+        wx.MessageBox(msg, header,
+            wx.OK | wx.ICON_INFORMATION)
+
+class MyApp(wx.App):
+    def OnInit(self):
+        frame = SettingsInterface(None, title="Settings")
+        self.SetTopWindow(frame)
+        frame.Show(True)
+        return True
 
 
-window=Tk()
-SettingsPage(window)
-window.mainloop()
+def start():
+    app = MyApp(0)
+    app.MainLoop()
+
+
+#----------------------------------------------------------------------
+
+overview = __doc__
+
+
+

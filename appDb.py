@@ -3,6 +3,7 @@ import os
 import unicodedata
 from pymongo import MongoClient
 import uuid
+import difflib
 
 client = MongoClient()
 
@@ -36,47 +37,33 @@ def printDocApp():
         print(doc)
 
 def findDocApp(app_name):
+    doc_list = []
     for doc in db.sysProgram.find():
         if app_name in doc['appNome']:
-            print 'q'
-    # doc = db.sysProgram.find_one({"appNome": app_name})
-    # if (doc == None):
-    #     return None
-    # else:
-    #     return doc
+            seq = difflib.SequenceMatcher(None, doc['appNome'], app_name)
+            match_value=seq.ratio()
+            if match_value >= 0.8:
+                return doc["path"], doc["appNome"], 'open'
+            else:
+                doc_list.append({"doc":doc,"match_value":match_value})
+    if len(doc_list) > 0:
+        doc_list_final = sorted(doc_list, key=lambda k: k['match_value'],reverse=True)
+        print doc_list_final[0]['doc']
+        return doc_list_final[0]['doc']["path"],doc_list_final[0]['doc']["appNome"], 'ask'
+    else:
+        return ("Program not found")
 
 def removeDocApp(path):
     db.sysProgram.delete_many({"path":path})
 
 def returnDocApp(appName):
      for doc in db.sysProgram.find({"appNome":appName}):
-         print (doc["path"])
          return doc["path"], doc["appNome"]
      return ("Program not found")
 
 def returnAllDocApp():
     return db.sysProgram.find()
 
-def updateDocApp(appName, info):
-    doc = findDocApp(appName)
-    print doc
-    speak_list = doc['appNome']
-    print type(speak_list)
-    print speak_list
-    if info in speak_list:
-        return 'Nickname already exist.'
-    else:
-        print type(appName)
-        print type(info)
-        speak_list.append(info)
-        # db.ProductData.update_one({
-        #       '_id': doc['_id']
-        #     },{
-        #       '$set': {
-        #         'fala': speak_list
-        #       }
-        #     }, upsert=False)
-        return 'Nickname added.'
 
 def startDB():
     directory = '/Applications'
@@ -103,7 +90,6 @@ def removeProfile():
 
 def addProfile(user, callname):
     pref = {}
-    print user, callname
     if checkUser(user):
         pref["user"] = user
         pref["callname"] = callname
@@ -122,6 +108,5 @@ def printDocUser():
 
 def returnDocUser():
      for doc in db.userProfile.find():
-        print(doc)
         return doc
      return ("Error")
