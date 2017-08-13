@@ -12,21 +12,17 @@ class myThread (Thread):
         if self.func == 'sysTray':
             start_sysTray()
 
-def start_assistant():
+def start_assistant(a):
     assistant.start()
 
-def start_sysTray():
+def start_sysTray(a):
     sysTray.start()
 
 if __name__ == "__main__":
     try:
-        # Create new threads
-        thread1 = myThread('start_assistant')
-        thread2 = myThread('sysTray')
+        th1 = Thread(target= start_assistant, args=('a') ).start()
+        th2 = Thread(target= start_sysTray, args=('a') ).start()
 
-        # Start new Threads
-        thread1.start()
-        thread2.start()
     except Exception as e:
 
         print e

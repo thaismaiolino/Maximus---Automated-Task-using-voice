@@ -1,3 +1,7 @@
+import Foundation
+from optparse import OptionParser
+
+import sys
 from datetime import datetime
 import speech_recognition as sr
 import webbrowser
@@ -49,6 +53,7 @@ def doAction(a):
 
                 else:
                     if tmp[2] == 'open':
+                        systemTalks('Wait a second while I am openning ' + tmp[1])
                         path_ini = tmp[0].replace(' ', '\ ')
                         path_tmp = path_ini.split('/')
                         path = "/"+path_tmp[1]+"/"+path_tmp[2]+"/Contents/MacOS/" + path_tmp[2].replace('.app','')
@@ -117,6 +122,7 @@ def doAction(a):
                 wait_anwser = {"active": False, "waiting_command": False, "waiting_anwser":False, "action":None, "program": None}
         elif 'no' in action:
             systemTalks("See you later!")
+            sys.exit()
             wait_anwser = {"active": False, "waiting_command": False, "waiting_anwser":False, "action":None, "program": None}
 
         elif action is not "":
@@ -179,8 +185,23 @@ def retrieve_city_weather_info(city):
 
 def systemTalks(phrase):
     voice = "say -v Alex"
+    system_notification(phrase)
     return os.system( voice + " " + phrase)
-    print phrase
+
+
+
+def system_notification(msg):
+    parser = OptionParser(usage='%prog -t TITLE -m MESSAGE')
+    parser.add_option('-t', '--title', action='store', default='Virtual Assistant')
+    parser.add_option('-m', '--message', action='store', default=msg)
+
+    options, args = parser.parse_args()
+
+    notification = Foundation.NSUserNotification.alloc().init()
+    notification.setTitle_(options.title)
+    notification.setInformativeText_(options.message)
+    center = Foundation.NSUserNotificationCenter.defaultUserNotificationCenter()
+    center.deliverNotification_(notification)
 
 def internet_on():
 
